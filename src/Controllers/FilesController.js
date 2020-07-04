@@ -15,7 +15,7 @@ export class FilesController extends AdaptableController {
     return this.adapter.getFileData(filename);
   }
 
-  createFile(config, filename, data, contentType) {
+  createFile(config, filename, data, contentType, options) {
     const extname = path.extname(filename);
 
     const hasExtension = extname.length > 0;
@@ -31,16 +31,25 @@ export class FilesController extends AdaptableController {
     }
 
     const location = this.adapter.getFileLocation(config, filename);
-    return this.adapter.createFile(filename, data, contentType).then(() => {
-      return Promise.resolve({
-        url: location,
-        name: filename,
+    return this.adapter
+      .createFile(filename, data, contentType, options)
+      .then(() => {
+        return Promise.resolve({
+          url: location,
+          name: filename,
+        });
       });
-    });
   }
 
   deleteFile(config, filename) {
     return this.adapter.deleteFile(filename);
+  }
+
+  getMetadata(filename) {
+    if (typeof this.adapter.getMetadata === 'function') {
+      return this.adapter.getMetadata(filename);
+    }
+    return Promise.resolve({});
   }
 
   /**
@@ -50,7 +59,7 @@ export class FilesController extends AdaptableController {
    */
   expandFilesInObject(config, object) {
     if (object instanceof Array) {
-      object.map(obj => this.expandFilesInObject(config, obj));
+      object.map((obj) => this.expandFilesInObject(config, obj));
       return;
     }
     if (typeof object !== 'object') {
